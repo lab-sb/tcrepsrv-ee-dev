@@ -1,0 +1,77 @@
+
+-------------------------
+-- usage example --------
+-------------------------
+
+-- 1 Scenario
+we want to set up a replica in this configuration:
+
+TC Rep Srv installed on host repsrv_host
+DB Master running on host mstr_host , db mstrdb, node named e4p
+DB Slave running on host slv_host , db slvdb, node named e4t
+
+RDB (replication DB) of Master on host rdb_mstr_host	(different host from master host), 	db rdb_db__e4p
+RDB (replication DB) of Slave  on host slv_host 	(same host of slave db), 			db rdb_db__e4t
+
+-- 2 Install TCapture software
+
+>> get sw
+[repsrv_host]$ git clone https://github.com/lab-sb/tcrepsrv-ee-dev.git
+
+>> Copy the decoder libary, rdblogdec.so , on master host  (this example supposes pg v.10, in case of different version, it is necessary to compile from source, follow the instructions in COMPILE_DECODER_LIB)
+[repsrv_host]$ scp ./rdbbdr/lib/rdb_decoder/rdblogdec.so root@mstr_host:/usr/pgsql-10/lib/
+
+>> prepare master db postgresql.conf 
+ 
+[mstr_host]$
+ 
+	##### logical decoding
+	wal_level = logical
+	max_wal_senders = 10    # max number of walsender processes
+	max_replication_slots = 18
+	track_commit_timestamp = on
+		
+>> 	Setting up replication system user 
+[mstr_host]$ psql 
+create user prod_user  superuser inherit login password 'prod_pwd';
+
+>>  Creating the replication Database on host rdb_mstr_host
+[rdb_mstr_host]$ psql 
+create user prod_user  superuser inherit login password 'prod_pwd';
+create database rdb_db__e4p;
+
+>> Sourche the env variable file
+[repsrv_host] . .rdbbdr_env.sh
+
+>> config master node, this generate the file conf/e4p_rdb_bdr.conf
+
+[repsrv_host]$ sh TC_srvctl.sh  --config --type producer --node e4p  --host mstr_host --port 5432 --user prod_user --passwd prod_pwd -db mstrdb --rhost rdb_mstr_host --ruser prod_user --rport 5432 --rpasswd prod_pwd
+
+>> setup , create db structure and publication on rdb_db__e4p  , replication slot on mstrdb 
+[repsrv_host]$ sh TC_srvctl.sh --setup  --node e4p --type producer
+
+
+>> simililarly prepare and setup  slave db
+
+[repsrv_host]$ sh TC_srvctl.sh  --config --type consumer --node e4t  --host slv_host --port 5432 --user prod_user --passwd prod_pwd -db slvdb --rhost slv_host --ruser prod_user --rport 5432 --rpasswd prod_pwd
+[repsrv_host]$ sh TC_srvctl.sh --setup  --node e4t --type consmuer --producer e4p
+
+
+>> Start replication server 
+
+[repsrv_host]$ bin/runTCRepSrv.sh -n e4p 
+[repsrv_host]$ bin/runTCRepSrv.sh -n e4t
+
+>> Playing with the replicated database
+
+
+>> Check logs 
+[repsrv_host]$ TCRepSrv_e4p.log
+[repsrv_host]$ TCRepSrv_e4t.log
+
+
+
+>> Stop 
+
+[repsrv_host]$  bin/stopTCRepSrv.sh -n nodename
+
