@@ -1,1 +1,6 @@
-inprogress
+
+Changes, compared to version lab-sb/tcrepsrv-devi(sequential processing):
+
+* multithreaded structure
+	
+
