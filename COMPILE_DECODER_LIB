@@ -1,0 +1,29 @@
+-----------------------------------------------------
+- library compilation on example on version 9.6
+-----------------------------------------------------
+# library compilation on version 9.6
+yum install postgresql96-dev
+
+yum install gcc-c ++. x86_64
+yum update postgresql96 (version> 9.6.15)
+
+export PATH=/usr/pgsql-9.6/bin/:$PATH
+
+cd /tmp/rdblog/
+ 
+   ll
+
+Makefile
+rdblogdec.c
+rdblogdec.o
+rdblogdec.so
+README
+
+
+make
+make install
+
+/usr/bin/install -c -m 755 rdblogdec.so '/usr/pgsql-9.6/lib/'
+
+test - SELECT * FROM pg_create_logical_replication_slot ('rdb_tst_bdr', 'rdblogdec');
+select pg_drop_replication_slot ('test_decoding');

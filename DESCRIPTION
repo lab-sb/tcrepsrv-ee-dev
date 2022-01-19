@@ -1,0 +1,14 @@
+TCapture
+
+TCapture is a Replication Server Multi master solution for PostgreSql databases
+
+the Engine is a combination of java, custom decoder lib, custom _rdb_bdr schema moving the data replication and  slots/publication/subsctiption configuration on posgres side.
+The data decoded from wals is moved in primary nodes tables (walq_node tables) which are published.
+The node joininig a primary node flow replication subscribe the walq primary node table and scan the walq to apply the replicate data locally.
+
+Replication slots are created on primary nodes for :
+main decoderer slot
+each subscriptor node of its walq publication
+
+The java engine ( RepSrvr ) duty is to  move data from decoder wal to walq table in a robust, secure, fast, reliable manner.
+The java engine (Consumer) duty is to scan the walq locally tables and apply changes to local databases managing filters and conflicts.
