@@ -1,0 +1,64 @@
+
+Replication slot used in logical decoding of documental database give error: got sequence entry 258 for toast chunk 538757697 instead of seq 0
+
+
+Bug Description
+
+our setup:
+  Postgres server is running on CentOS release 6.10 (Final)  instance. 
+  Server Version is PostgreSQL 9.5.9 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-18), 64-bit
+
+With the following parameters set:
+
+wal_level = 'logical' # replica < logical
+max_replication_slots = 10
+max_wal_senders = 10
+track_commit_timestamp = on
+
+We are using decoder  module for retrieving/read the WAL data through the logical decoding mechanism.
+
+
+Application setup: 
+
+The actual TCapture engine is a Java application which runs as a separate program outside Postgres, and which must be started explicitly.
+When TCapture is running, it will scan the transaction log  (with TCapt module) of all primary databases and pick up transactions which must be replicated.
+Transactions which have been picked up are stored in the “Replication Database”, a PG user database exclusively used by TCapture.
+In the Replication Database, transaction is ‘copied’ to all replicate databases which have a subscription for this transaction.
+ Transaction is then applied to the replicate tables by inserting it into by the dedicated Java application module
+
+ 
+ We runs TCapt module in the loop for reading a primary database which is a documental database (with binary columns) . 
+
+
+Behavior reported (Bug)
+  We have TCapture Replication Server  running for successfully for weeks but recently we encountered following error: 
+
+cat log/TCapture_enodp_2021-04-12-11\:30\:16_err.log
+    org.postgresql.util.PSQLException: ERROR: got sequence entry 258 for toast chunk 538757697 instead of seq 0
+            at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2553)
+            at org.postgresql.core.v3.QueryExecutorImpl.processCopyResults(QueryExecutorImpl.java:1212)
+            at org.postgresql.core.v3.QueryExecutorImpl.readFromCopy(QueryExecutorImpl.java:1112)
+            at org.postgresql.core.v3.CopyDualImpl.readFromCopy(CopyDualImpl.java:44)
+            at org.postgresql.core.v3.replication.V3PGReplicationStream.receiveNextData(V3PGReplicationStream.java:160)
+            at org.postgresql.core.v3.replication.V3PGReplicationStream.readInternal(V3PGReplicationStream.java:125)
+            at org.postgresql.core.v3.replication.V3PGReplicationStream.readPending(V3PGReplicationStream.java:82)
+            at com.edslab.TCapt.receiveChangesOccursBeforTCapt(TCapt.java:421)
+            at com.edslab.TCapt.run(TCapt.java:182)
+            at java.lang.Thread.run(Thread.java:745)
+
+
+After restarting our TCapt module (see https://www.tcapture.net/ for better understand the project TCapture), the error went away. But this causes the producer module (Tapt) to shut down. 
+
+Please note that we run TCapture with other Postgres versions (9.6, 10, 11,ec..) without problems !!
+
+Is there any  resolution for this issue or is it resolved in the higher version of postgres? 
+
+No answered by Postgresql Community 
+No response was given by the postgresql community / support
+
+
+
+
+
+
+
