@@ -9,7 +9,7 @@ This is version TCapture Replication Server Enterprise Edition dev 0.9.8.008 .
 COPYRIGHT:
 ----------
 
-    Copyright (c) 2019-2022  silvio.brandani <support@tcapture.net>. All rights reserved.
+    Copyright (c) 2019-2022  silvio.brandani <mktg.tcapture@gmail.com>. All rights reserved.
 
 
 REQUIREMENTS:
